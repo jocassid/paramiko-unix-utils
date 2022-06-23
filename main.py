@@ -42,7 +42,6 @@ class Command(ABC):
     def __init__(self, executable: str):
         self.executable = executable
         self.args = []
-        self.return_value = 0
 
     def build_command(self) -> str:
         pieces = self.args.copy()
@@ -53,11 +52,11 @@ class Command(ABC):
     def handle_stdout_line(self, line_number: int, line: str) -> None:
         raise NotImplementedError('subclasses should implement')
 
+    @abstractmethod
     def handle_stderr_line(self, line_number: int, line: str) -> None:
-        self.return_value = 1
+        raise NotImplementedError('subclasses should implement')
 
-    def execute(self, ssh_client: SSHClient) -> int:
-        self.return_value = 0
+    def execute(self, ssh_client: SSHClient) -> None:
         stdout_line_num = 0
         stderr_line_num = 0
         output = exec_command_stream_output(
@@ -71,7 +70,6 @@ class Command(ABC):
                 continue
             stdout_line_num += 1
             self.handle_stdout_line(stdout_line_num, line)
-        return self.return_value
 
 
 class StderrCachingCommand(Command):
